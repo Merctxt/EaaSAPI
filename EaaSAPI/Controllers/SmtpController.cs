@@ -3,11 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using EaaSAPI.Models;
 using MailKit.Net.Smtp;
 using MimeKit;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace EaaSAPI.Controllers
 {
     [Route("api/v1/[controller]")]
     [ApiController]
+    [EnableRateLimiting("fixed")]
     public class SmtpController : ControllerBase
     {
         [HttpPost("send")]

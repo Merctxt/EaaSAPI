@@ -1,7 +1,19 @@
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = 429;
+    options.AddFixedWindowLimiter("fixed", opt =>
+    {
+        opt.PermitLimit = 30;
+        opt.Window = TimeSpan.FromSeconds(60);
+        opt.QueueLimit = 2;
+    });
+});
 
 // Add services to the container.
 
@@ -33,6 +45,12 @@ app.MapScalarApiReference(options =>
            .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
            .AddPreferredSecuritySchemes("https");
 });
+
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseRateLimiter();
+}
 
 app.UseAuthorization();
 
