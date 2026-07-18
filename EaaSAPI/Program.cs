@@ -12,19 +12,14 @@ builder.Services.AddOpenApi();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.MapOpenApi();
+
+app.MapScalarApiReference(options =>
 {
-    app.MapOpenApi();
-
-    app.MapScalarApiReference(options =>
-    {
-        options.WithTitle("SMTP API")
-               .ForceDarkMode()
-               .WithTheme(ScalarTheme.DeepSpace);
-    });
-}
-
-app.UseHttpsRedirection();
+    options.WithTitle("SMTP API")
+           .ForceDarkMode()
+           .WithTheme(ScalarTheme.DeepSpace);
+});
 
 app.UseAuthorization();
 
