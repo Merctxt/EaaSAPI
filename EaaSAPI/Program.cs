@@ -1,25 +1,9 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Scalar.AspNetCore;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddRateLimiter(options =>
-{
-    options.RejectionStatusCode = 429;
-    options.AddFixedWindowLimiter("fixed", opt =>
-    {
-        opt.PermitLimit = 30;
-        opt.Window = TimeSpan.FromSeconds(60);
-        opt.QueueLimit = 2;
-    });
-});
-
-// Add services to the container.
-
-builder.Services.AddControllers();
-
-builder.Services.AddOpenApi();
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
@@ -29,6 +13,28 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownNetworks.Clear();
     options.KnownProxies.Clear();
 });
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = 429;
+    options.AddPolicy("fixed", httpContext =>
+    {
+        var remoteIp = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter(remoteIp, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 30,
+            Window = TimeSpan.FromMinutes(60),
+            QueueLimit = 0
+        });
+    });
+});
+
+// Add services to the container.
+
+builder.Services.AddControllers();
+
+builder.Services.AddOpenApi();
+
 
 var app = builder.Build();
 
